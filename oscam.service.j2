@@ -1,0 +1,21 @@
+[Unit]
+Description=oscam
+After=syslog.target network.target auditd.service
+ 
+[Service]
+EnvironmentFile=-/etc/sysconfig/oscam
+ExecStart=/usr/bin/oscam \
+        --daemon \
+        --pidfile $PIDFILE \
+        --debug $DEBUG_LEVEL \
+        --restart $RESTART_POLICY \
+        --config-dir $CONFIGDIR \
+        --temp-dir $TEMPDIR \
+        $EXTRA_DAEMON_ARGS
+PIDFile=/var/run/oscam.pid
+Type=forking
+Restart=on-failure
+RestartSec=54s
+ 
+[Install]
+WantedBy=multi-user.target

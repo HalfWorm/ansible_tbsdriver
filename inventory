@@ -1,0 +1,2 @@
+[all]
+TBS2951.lavrov.co ansible_connection=local media_build=media_build-2020-04-13.tar.bz2 fedora_ver=32

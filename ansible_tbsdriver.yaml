@@ -1,0 +1,278 @@
+---
+- hosts: all
+  tasks:
+    - name: set_fact
+      set_fact:
+         system_settings_locale: ru_RU.UTF-8
+         system_settings_keymap: ru
+         system_settings_font: cyr-sun16
+         system_settings_dir: /usr/src/tbs
+         system_settings_oscam_repo: http://www.streamboard.tv/svn/oscam/trunk
+
+      
+    - name: Измените имя хоста
+      hostname:
+        name="{{ inventory_hostname_short }}"
+      become: yes
+
+    - name: Исправляем /etc/hosts
+      lineinfile:
+        state=present
+        dest=/etc/hosts
+        line="127.0.1.1	{{ inventory_hostname }}	{{ ansible_hostname }}"
+        regexp="^127.0.1.1"
+      become: yes
+
+    - name: Исправляем /etc/hosts
+      tags:
+        - hosts
+      lineinfile:
+        state=present
+        dest=/etc/hosts
+        line="{{ ansible_default_ipv4.address }}	{{ inventory_hostname }}	{{ ansible_hostname }}"
+        regexp="^{{ ansible_default_ipv4.address }}"
+      become: yes
+
+    
+    - name: localectl set-locale
+      shell: 'localectl set-locale LANG="{{ system_settings_locale }}"'
+      become: yes
+
+    - name: set keymap
+      lineinfile:
+        state=present
+        dest=/etc/vconsole.conf
+        line='KEYMAP="{{ system_settings_locale }}"'
+        regexp="^KEYMAP"
+      become: yes
+
+    - name: set font
+      lineinfile:
+        state=present
+        dest=/etc/vconsole.conf
+        line='FONT="{{ system_settings_font }}"'
+        regexp="^FONT"
+      become: yes
+
+    - name: Ставим ПО
+      package:
+        name: 
+          "{{ packages }}"
+        state: 
+          latest
+      vars:
+         packages:
+         - mc
+         - nano
+         - htop
+         - tar
+         - bzip2
+         - unzip
+         - wget
+         - git
+         - pciutils
+         - bash-completion
+         - gcc
+         - make
+         - patchutils
+         - perl-Digest* 
+         - perl-Proc* 
+         - perl-devel 
+         - perl-ExtUtils-CBuilder 
+         - perl-ExtUtils-MakeMaker 
+         - elfutils-libelf-devel
+      become: yes
+
+    - name: Development tools
+      package:
+        name: "@Development tools"
+        state:
+          latest
+      become: yes
+
+    - name: delete directory for drivers {{system_settings_dir}}
+      file:
+        path: "{{system_settings_dir}}"
+        state: absent
+      become: yes
+
+    - name: create directory for drivers {{system_settings_dir}}
+      file:
+        path: "{{system_settings_dir}}"
+        state: directory
+        mode: '1777'
+      become: yes
+
+    - name: Download {{media_build}}
+      get_url:
+        url: http://www.tbsdtv.com/download/document/linux/{{media_build}}
+        dest: "{{system_settings_dir}}"
+        mode: '0664'
+      become: yes
+
+    - name: Extract {{media_build}} в {{system_settings_dir}}
+      unarchive:
+        src: "{{system_settings_dir}}/{{media_build}}"
+        dest: "{{system_settings_dir}}"
+      become: yes
+
+    - name: install driver
+      script:
+        cmd: "{{system_settings_dir}}/media_build/install.sh"
+        chdir: "{{system_settings_dir}}/media_build/"
+      become: yes
+      
+
+
+
+
+    - name: Ставим ПО для OSCAM
+      package:
+        name: 
+          "{{ packages }}"
+        state: 
+          latest
+      vars:
+         packages:
+         - subversion
+         - gcc
+         - g++
+         - cmake
+         - dialog
+         - openssl
+         - openssl-devel
+         - libusb-devel
+      become: yes      
+
+    - name: Export subversion directory to folder
+      subversion:
+        repo: "{{system_settings_oscam_repo}}"
+        dest: "{{system_settings_dir}}/oscam"
+        export: yes      
+      become: yes
+      
+    - name: config premake OSCAM
+      script:
+        cmd: "{{system_settings_dir}}/oscam/config.sh --enable all"
+        chdir: "{{system_settings_dir}}/oscam/"
+      become: yes
+
+    - name: make OSCAM
+      script:
+        cmd: "/usr/bin/make OSCAM_BIN=oscam BINDIR='/usr/bin' CONF_DIR='/etc/oscam'"
+        chdir: "{{system_settings_dir}}/oscam/"
+      become: yes
+
+    - name: Copy OSCAM to /usr/bin/
+      copy:
+        src: "{{system_settings_dir}}/oscam/oscam"
+        dest: "/usr/bin/"
+        owner: root
+        group: root
+        mode: u=rwx,g=rx,o=rx
+      become: yes
+      
+    - name: create directory /etc/oscam
+      file:
+        path: "/etc/oscam"
+        state: directory
+        mode: '1777'
+      become: yes
+
+    - name: create directory /var/log/oscam
+      file:
+        path: "/var/log/oscam"
+        state: directory
+        mode: '1755'
+      become: yes
+    
+    - name: Copy example to /etc/oscam
+      copy:
+        src: "{{system_settings_dir}}/oscam/Distribution/doc/example/"
+        dest: "/etc/oscam/"
+        owner: root
+        group: root
+        force: no
+        #backup: yes
+      become: yes
+      
+    - name: устанавливаем OSCAM.service в systemd
+      template:
+        src: oscam.service.j2
+        dest: /etc/systemd/system/oscam.service
+      become: yes
+
+    - name: устанавливаем конфиг OSCAM
+      template:
+        src: oscam.j2
+        dest: /etc/sysconfig/oscam
+        force: no
+        #backup: yes
+      become: yes  
+
+    - name: устанавливаем конфиг logrotate OSCAM
+      template:
+        src: logrotate.oscam.j2
+        dest: /etc/logrotate.d/oscam
+        force: no
+      become: yes
+
+    - name: настраиваем systemd для OSCAM
+      systemd:
+        daemon_reload: yes
+        enabled: yes
+        state: started
+        name: oscam.service
+      become: yes
+
+    - name: Добовляем правило в firewall
+      firewalld:
+        zone: public
+        port: 8888/tcp
+        permanent: yes
+        state: enabled
+        immediate: yes
+      become: yes
+
+
+
+
+    - name: Ставим ПО для tvheadend
+      package:
+        name: 
+          "{{ packages }}"
+        state: 
+          latest
+      vars:
+         packages:
+         - "http://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-{{fedora_ver}}.noarch.rpm"
+         - "http://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-{{fedora_ver}}.noarch.rpm"
+      become: yes       
+      
+    - name: Ставим tvheadend
+      package:
+        name: 
+          "{{ packages }}"
+        state: 
+          latest
+      vars:
+         packages:
+         - tvheadend
+      become: yes       
+      
+    - name: настраиваем systemd для tvheadend
+      systemd:
+        daemon_reload: yes
+        enabled: yes
+        state: started
+        name: tvheadend.service
+      become: yes   
+
+    - name: Добовляем правило в firewall для tvheadend
+      firewalld:
+        zone: public
+        port: 9981-9982/tcp
+        permanent: yes
+        state: enabled
+        immediate: yes
+      become: yes      
