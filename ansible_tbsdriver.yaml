@@ -54,6 +54,19 @@
         regexp="^FONT"
       become: yes
 
+    - name: Ставим kernel
+      package:
+        name: 
+          "{{ packages }}"
+        state: 
+          latest
+      vars:
+         packages:
+         - kernel
+         - kernel-headers
+         - kernel-devel
+      become: yes
+
     - name: Ставим ПО
       package:
         name: 
