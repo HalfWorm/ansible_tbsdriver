@@ -19,7 +19,7 @@
       lineinfile:
         state=present
         dest=/etc/hosts
-        line="127.0.1.1	{{ inventory_hostname }}	{{ ansible_hostname }}"
+        line="127.0.1.1	{{ inventory_hostname }}	{{ inventory_hostname_short }}"
         regexp="^127.0.1.1"
       become: yes
 
@@ -29,7 +29,7 @@
       lineinfile:
         state=present
         dest=/etc/hosts
-        line="{{ ansible_default_ipv4.address }}	{{ inventory_hostname }}	{{ ansible_hostname }}"
+        line="{{ ansible_default_ipv4.address }}	{{ inventory_hostname }}	{{ inventory_hostname_short }}"
         regexp="^{{ ansible_default_ipv4.address }}"
       become: yes
 
