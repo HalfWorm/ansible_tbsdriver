@@ -83,12 +83,12 @@
          - elfutils-libelf-devel
       become: yes
 
-    - name: Development tools
-      package:
-        name: "@Development tools"
-        state:
-          latest
-      become: yes
+#    - name: Development tools
+#      package:
+#        name: "@Development tools"
+#        state:
+#          latest
+#      become: yes
 
     - name: delete directory for drivers {{system_settings_dir}}
       file:
