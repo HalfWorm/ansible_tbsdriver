@@ -284,7 +284,7 @@
     - name: Добовляем правило в firewall для tvheadend
       firewalld:
         zone: public
-        port: 9981-9982,554,9983/tcp
+        port: 9981-9982/tcp
         permanent: yes
         state: enabled
         immediate: yes
