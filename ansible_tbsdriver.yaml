@@ -8,7 +8,6 @@
          system_settings_font: cyr-sun16
          system_settings_dir: /usr/src/tbs
          system_settings_oscam_repo: http://www.streamboard.tv/svn/oscam/trunk
-
       
     - name: Измените имя хоста
       hostname:
@@ -32,7 +31,6 @@
         line="{{ ansible_default_ipv4.address }}	{{ inventory_hostname }}	{{ inventory_hostname_short }}"
         regexp="^{{ ansible_default_ipv4.address }}"
       become: yes
-
     
     - name: localectl set-locale
       shell: 'localectl set-locale LANG="{{ system_settings_locale }}"'
@@ -94,6 +92,7 @@
          - perl-ExtUtils-CBuilder 
          - perl-ExtUtils-MakeMaker 
          - elfutils-libelf-devel
+         - lm_sensors
       become: yes
 
 #    - name: Development tools
@@ -134,10 +133,6 @@
         cmd: "{{system_settings_dir}}/media_build/install.sh"
         chdir: "{{system_settings_dir}}/media_build/"
       become: yes
-      
-
-
-
 
     - name: Ставим ПО для OSCAM
       package:
@@ -246,9 +241,6 @@
         state: enabled
         immediate: yes
       become: yes
-
-
-
 
     - name: Ставим ПО для tvheadend
       package:
