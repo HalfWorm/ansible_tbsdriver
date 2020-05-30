@@ -273,7 +273,7 @@
         name: tvheadend.service
       become: yes   
 
-    - name: Добовляем правило в firewall для tvheadend
+    - name: Добовляем правило в firewall для tvheadend 9981-9982/tcp
       firewalld:
         zone: public
         port: 9981-9982/tcp
@@ -281,3 +281,21 @@
         state: enabled
         immediate: yes
       become: yes      
+
+    - name: Добовляем правило в firewall для rtsp 554/tcp
+      firewalld:
+        zone: public
+        port: 554/tcp
+        permanent: yes
+        state: enabled
+        immediate: yes
+      become: yes
+
+    - name: Добовляем правило в firewall для rtsp 9983/tcp
+      firewalld:
+        zone: public
+        port: 9983/tcp
+        permanent: yes
+        state: enabled
+        immediate: yes
+      become: yes
