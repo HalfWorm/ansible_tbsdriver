@@ -1,0 +1,43 @@
+---
+- hosts: all
+  tasks:
+    - name: set_fact
+      set_fact:
+         system_settings_locale: ru_RU.UTF-8
+         system_settings_keymap: ru
+         system_settings_font: cyr-sun16
+         system_settings_dir: /usr/src/tbs
+         system_settings_oscam_repo: http://www.streamboard.tv/svn/oscam/trunk
+      
+    - name: delete directory for drivers {{system_settings_dir}}
+      file:
+        path: "{{system_settings_dir}}"
+        state: absent
+      become: yes
+
+    - name: create directory for drivers {{system_settings_dir}}
+      file:
+        path: "{{system_settings_dir}}"
+        state: directory
+        mode: '1777'
+      become: yes
+
+    - name: Download {{media_build}}
+      get_url:
+        url: http://www.tbsdtv.com/download/document/linux/{{media_build}}
+        dest: "{{system_settings_dir}}"
+        mode: '0664'
+      become: yes
+
+    - name: Extract {{media_build}} в {{system_settings_dir}}
+      unarchive:
+        src: "{{system_settings_dir}}/{{media_build}}"
+        dest: "{{system_settings_dir}}"
+      become: yes
+
+    - name: install driver
+      script:
+        cmd: "{{system_settings_dir}}/media_build/install.sh"
+        chdir: "{{system_settings_dir}}/media_build/"
+      become: yes
+

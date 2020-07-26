@@ -9,4 +9,12 @@ $ git clone https://github.com/HalfWorm/ansible_tbsdriver.git
 
 $ cd ansible_tbsdriver
 
-$ ansible-playbook -i inventory ansible_tbsdriver.yaml or ansible-playbook -i inventory ansible_tbsdriver.yaml -vvv
+$ ansible-playbook -i inventory ansible_tbsdriver.yaml 
+
+or 
+
+$ ansible-playbook -i inventory ansible_tbsdriver.yaml -vvv
+
+or
+
+$ ansible-playbook -i inventory ansible_tbsdriver_only_driver.yaml
