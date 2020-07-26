@@ -18,3 +18,5 @@ $ ansible-playbook -i inventory ansible_tbsdriver.yaml -vvv
 or
 
 $ ansible-playbook -i inventory ansible_tbsdriver_only_driver.yaml
+
+version media_build https://www.tbsdtv.com/forum/search.php?keywords=http%3A%2F%2Fwww.tbsdtv.com%2Fdownload%2Fdocument%2Flinux%2Fmedia_build-
